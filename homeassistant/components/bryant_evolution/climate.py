@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -41,7 +42,8 @@ async def async_setup_entry(
         config_entry.data[CONF_ZONE_ID],
         client,
     )
-    async_add_entities([climate], update_before_add=True)
+    curr_temp = BryantEvolutionTemperatureSensor(climate)
+    async_add_entities([climate, curr_temp], update_before_add=True)
 
 
 class BryantEvolutionClimate(ClimateEntity):
@@ -242,3 +244,21 @@ class BryantEvolutionClimate(ClimateEntity):
             )
         self._attr_fan_mode = fan_mode.lower()
         self.async_write_ha_state()
+
+
+class BryantEvolutionTemperatureSensor(SensorEntity):
+    """Representation of a Bryant Evolution Temperature Sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+
+    def __init__(self, climate_entity: BryantEvolutionClimate) -> None:
+        """Initialize the sensor."""
+        self._climate_entity = climate_entity
+        self._attr_name = f"{climate_entity.name} Temperature"
+        self._attr_unique_id = f"{climate_entity.unique_id}_temperature"
+        self._attr_device_info = climate_entity.device_info
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current temperature."""
+        return self._climate_entity.current_temperature
