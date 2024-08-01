@@ -73,7 +73,6 @@ async def async_setup_entry(
             entry.runtime_data[tuple(sz)] = client
         except FileNotFoundError as f:
             raise ConfigEntryNotReady from f
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
